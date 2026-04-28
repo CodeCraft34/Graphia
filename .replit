@@ -1,8 +1,37 @@
+modules = ["python-3.11"]
 [nix]
 packages = ["streamlit"]
 
 [[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
 localPort = 8080
 externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Streamlit App"
+
+[[workflows.workflow]]
+name = "Streamlit App"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ".pythonlibs/bin/streamlit run app.py --server.port 5000"
+waitForPort = 5000
 
 
