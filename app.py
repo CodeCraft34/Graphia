@@ -1,82 +1,111 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
-from scipy import stats
+from scipy.interpolate import interp1d
+import numpy as np
 
-st.set_page_config(
-    page_title="Streamlit Template",
-    page_icon=None,
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# Page Config
+st.set_page_config(page_title="Visualisor", layout="wide")
+st.title("📊 Visualisor: Your Data, Your Vision")
 
-st.title("Streamlit Template")
-st.write(
-    "A starter template wired up with Streamlit, pandas, plotly, scipy, and kaleido."
-)
+# --- SIDEBAR NAVIGATION ---
+st.sidebar.header("Navigation")
+app_mode = st.sidebar.selectbox("Choose a Section", ["Data Input & Viz", "Analysis Tools"])
 
-with st.sidebar:
-    st.header("Controls")
-    n_points = st.slider("Number of points", min_value=50, max_value=1000, value=200, step=50)
-    noise = st.slider("Noise level", min_value=0.0, max_value=2.0, value=0.5, step=0.1)
-    seed = st.number_input("Random seed", min_value=0, value=42, step=1)
+# --- SHARED DATA INITIALIZATION ---
+if 'df' not in st.session_state:
+    st.session_state.df = pd.DataFrame(columns=["X", "Y"])
 
-rng = np.random.default_rng(int(seed))
-x = np.linspace(0, 10, n_points)
-y = 2.0 * x + 1.0 + rng.normal(0, noise, size=n_points)
-df = pd.DataFrame({"x": x, "y": y})
+# --- SECTION 1: DATA INPUT & VIZ ---
+if app_mode == "Data Input & Viz":
+    col1, col2 = st.columns([1, 2])
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(df["x"], df["y"])
-df["fit"] = intercept + slope * df["x"]
+    with col1:
+        st.subheader("1. Load Data")
+        upload_choice = st.radio("Source:", ["Upload CSV", "Manual Entry"])
+        
+        if upload_choice == "Upload CSV":
+            uploaded_file = st.file_uploader("Upload your file", type=["csv"])
+            if uploaded_file:
+                st.session_state.df = pd.read_csv(uploaded_file)
+        else:
+            st.info("Edit the table below to add data:")
+            st.session_state.df = st.data_editor(st.session_state.df, num_rows="dynamic")
 
-tab_chart, tab_data, tab_export = st.tabs(["Chart", "Data", "Export"])
+    with col2:
+        st.subheader("2. Configure Visualization")
+        df = st.session_state.df
+        
+        if not df.empty and len(df.columns) >= 2:
+            chart_type = st.selectbox("Chart Type", ["Line/Scatter", "Pie Chart", "Histogram"])
+            title = st.text_input("Chart Title", "My Visualization")
+            
+            # Dynamic Columns based on data
+            cols = df.columns.tolist()
+            
+            if chart_type == "Line/Scatter":
+                x_axis = st.selectbox("X Axis", cols)
+                y_axis = st.selectbox("Y Axis", cols)
+                mode = st.toggle("Show as Points (Scatter)")
+                animate = st.toggle("Animated Preview (requires sequential data)")
+                
+                if animate:
+                    fig = px.scatter(df, x=x_axis, y=y_axis, animation_frame=x_axis, title=title)
+                else:
+                    fig = px.scatter(df, x=x_axis, y=y_axis, title=title) if mode else px.line(df, x=x_axis, y=y_axis, title=title)
 
-with tab_chart:
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Slope", f"{slope:.3f}")
-    col2.metric("Intercept", f"{intercept:.3f}")
-    col3.metric("R²", f"{r_value**2:.3f}")
-    col4.metric("p-value", f"{p_value:.2e}")
+            elif chart_type == "Pie Chart":
+                names = st.selectbox("Labels Column", cols)
+                values = st.selectbox("Values Column", cols)
+                hole_size = st.slider("Donut Hole Size", 0.0, 0.9, 0.4)
+                fig = px.pie(df, names=names, values=values, title=title, hole=hole_size)
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df["x"], y=df["y"], mode="markers", name="Data"))
-    fig.add_trace(go.Scatter(x=df["x"], y=df["fit"], mode="lines", name="Linear fit"))
-    fig.update_layout(
-        title="Linear regression",
-        xaxis_title="x",
-        yaxis_title="y",
-        height=500,
-    )
-    st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Histogram":
+                x_hist = st.selectbox("Select Column", cols)
+                bins = st.slider("Bins", 5, 100, 20)
+                fig = px.histogram(df, x=x_hist, nbins=bins, title=title)
 
-    hist = px.histogram(df, x="y", nbins=30, title="Distribution of y")
-    st.plotly_chart(hist, use_container_width=True)
+            # --- DISPLAY & DOWNLOAD ---
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Export Logic
+            img_format = st.selectbox("Download Format", ["png", "jpg", "svg", "pdf"])
+            if st.button(f"Generate Downloadable {img_format.upper()}"):
+                fig.write_image(f"viz.{img_format}")
+                with open(f"viz.{img_format}", "rb") as f:
+                    st.download_button("Click here to Download", f, file_name=f"visualization.{img_format}")
+        else:
+            st.warning("Please enter at least two columns of data to visualize.")
 
-with tab_data:
-    st.subheader("Sample data")
-    st.dataframe(df, use_container_width=True)
-    st.subheader("Summary statistics")
-    st.dataframe(df.describe(), use_container_width=True)
+# --- SECTION 2: ANALYSIS TOOLS ---
+elif app_mode == "Analysis Tools":
+    st.subheader("🛠️ Data Analysis Toolkit")
+    df = st.session_state.df
+    
+    if df.empty:
+        st.error("No data found! Go to 'Data Input & Viz' first.")
+    else:
+        tab1, tab2 = st.tabs(["Statistics (Mean/Median)", "Linear Interpolation"])
+        
+        with tab1:
+            target_col = st.selectbox("Select Numeric Column", df.select_dtypes(include=np.number).columns)
+            if target_col:
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Average (Mean)", round(df[target_col].mean(), 2))
+                c2.metric("Median", round(df[target_col].median(), 2))
+                c3.metric("Std Deviation", round(df[target_col].std(), 2))
 
-with tab_export:
-    st.subheader("Download CSV")
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="Download data.csv",
-        data=csv,
-        file_name="data.csv",
-        mime="text/csv",
-    )
-
-    st.subheader("Download chart as PNG")
-    st.caption("Static image export is powered by kaleido.")
-    if st.button("Generate PNG"):
-        png_bytes = fig.to_image(format="png", width=1200, height=700, scale=2)
-        st.download_button(
-            label="Download chart.png",
-            data=png_bytes,
-            file_name="chart.png",
-            mime="image/png",
-        )
+        with tab2:
+            st.write("Estimate missing values between points.")
+            x_col = st.selectbox("X (Independent)", df.columns, key="interp_x")
+            y_col = st.selectbox("Y (Dependent)", df.columns, key="interp_y")
+            
+            target_x = st.number_input(f"Enter {x_col} to find {y_col}:", value=0.0)
+            
+            if st.button("Interpolate"):
+                try:
+                    f = interp1d(df[x_col], df[y_col], kind='linear', fill_value="extrapolate")
+                    result = f(target_x)
+                    st.success(f"The interpolated value for {y_col} is: **{result:.4f}**")
+                except Exception as e:
+                    st.error(f"Error: {e}. Ensure X is sorted and contains only numbers.")
