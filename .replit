@@ -31,7 +31,10 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = ".pythonlibs/bin/streamlit run app.py --server.port 5000"
+args = ".pythonlibs/bin/streamlit run graph_maker.py --server.port 5000"
 waitForPort = 5000
+
+[agent]
+expertMode = true
 
 
