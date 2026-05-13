@@ -1,6 +1,4 @@
 import streamlit as st
-import matplotlib.pyplot
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.path as mpath
