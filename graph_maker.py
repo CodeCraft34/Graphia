@@ -7,15 +7,15 @@ import numpy as np
 import pandas as pd
 import io
 
-# ── Page config ──────────────────────────────────────────────────────────────
+# Page config 
 st.set_page_config(
-    page_title="Graph Maker",
+    page_title="Graphia",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── Minimal professional CSS ─────────────────────────────────────────────────
+#  Minimal professional css
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { background: #f7f7f7; }
@@ -38,7 +38,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# Helpers
 MARKERS   = ["None", "o", "s", "^", "D", "x", "+", "*", "v", "p", "h"]
 LINESTYLES = ["solid", "dashed", "dotted", "dashdot", "None"]
 COLORMAPS  = ["tab10", "Set1", "Set2", "Dark2", "Paired", "Accent"]
@@ -72,9 +72,10 @@ def color_cycle(cmap_name, n):
     cmap = plt.get_cmap(cmap_name)
     return [cmap(i / max(n - 1, 1)) for i in range(n)]
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
+# Sidebar
 with st.sidebar:
-    st.markdown("### Graph Maker")
+    st.markdown("# Graphia")
+    st.markdown("Make quality graphs with Mathplotlib.")
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # -- Data source
@@ -120,21 +121,21 @@ with st.sidebar:
     st.markdown("**Export**")
     dl_fmt = st.selectbox("Format", ["png", "pdf", "svg", "jpeg"])
 
-# ── Main area ────────────────────────────────────────────────────────────────
+#Main area
 st.markdown(f"## {chart_type} Graph")
 
-# Helper: column selector for CSV
+# Helper column selector for CSV
 def col_select(label, df, default_idx=0):
     cols = list(df.columns)
     return st.selectbox(label, cols, index=min(default_idx, len(cols)-1))
 
-# ── Per-chart configuration + plotting ──────────────────────────────────────
+# ── Per chart configuration + plotting 
 cfg_col, preview_col = st.columns([1, 2], gap="large")
 
 with cfg_col:
     st.markdown("### Configuration")
 
-    # ── LINE ────────────────────────────────────────────────────────────────
+    # Line
     if chart_type == "Line":
         if df_csv is not None:
             xc = col_select("X column", df_csv, 0)
@@ -170,7 +171,7 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"line_graph.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-    # ── SCATTER ─────────────────────────────────────────────────────────────
+    # SCATTER 
     elif chart_type == "Scatter":
         if df_csv is not None:
             xc = col_select("X column", df_csv, 0)
@@ -206,7 +207,7 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"scatter.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-    # ── BAR ─────────────────────────────────────────────────────────────────
+    # BAR 
     elif chart_type == "Bar":
         if df_csv is not None:
             xc = col_select("Category column", df_csv, 0)
@@ -273,7 +274,7 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"histogram.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-    # ── PIE ─────────────────────────────────────────────────────────────────
+    # Pie
     elif chart_type == "Pie":
         if df_csv is not None:
             label_c = col_select("Labels column", df_csv, 0)
@@ -323,7 +324,7 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"pie_chart.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-    # ── MULTIPLE LINES ───────────────────────────────────────────────────────
+    # MULTIPLE LINES 
     elif chart_type == "Multiple Lines":
         n_lines = st.number_input("Number of series", 2, 8, 3, 1)
         if df_csv is not None:
@@ -368,7 +369,7 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"multi_line.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-    # ── SUBPLOT GRID ─────────────────────────────────────────────────────────
+    # SUBPLOT GRID 
     elif chart_type == "Subplot Grid":
         n_rows = st.number_input("Rows", 1, 4, 2, 1)
         n_cols = st.number_input("Columns", 1, 4, 2, 1)
@@ -431,5 +432,5 @@ with cfg_col:
                     st.download_button(f"Download .{dl_fmt}", data, f"subplots.{dl_fmt}", mime=f"image/{dl_fmt}")
                     plt.close(fig)
 
-# ── Footer ───────────────────────────────────────────────────────────────────
-st.markdown("<br><hr><p style='font-size:0.75rem;color:#aaa;text-align:center;'>Graph Maker — Matplotlib-powered</p>", unsafe_allow_html=True)
+#  Footer 
+st.markdown("<br><hr><p style='font-size:0.75rem;color:#aaa;text-align:center;'>Graphia — Matplotlib-powered</p>", unsafe_allow_html=True)
