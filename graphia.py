@@ -12,7 +12,6 @@ st.set_page_config(page_title="Graphia \n- Create your Graphs and chart", layout
 
 st.markdown("""
 <style>
-    [data-testid="stSidebar"] { background: #f7f7f7; }
     [data-testid="stSidebar"] .stSelectbox label,
     [data-testid="stSidebar"] .stTextInput label,
     [data-testid="stSidebar"] .stNumberInput label,
