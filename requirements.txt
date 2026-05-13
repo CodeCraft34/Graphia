@@ -1,6 +1,7 @@
-streamlit==1.56.0
+streamlit
 pandas
 plotly
 scipy
 kaleido
 matplotlib
+numpy
