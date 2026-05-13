@@ -7,5 +7,5 @@ enableCORS = false
 primaryColor = "#1a6f3c"
 backgroundColor = "#e6e9f0"
 secondaryBackgroundColor = "#161b22"
-textColor = "#fafafa"
+textColor = "#e6e9f0"
 font = "sans serif"
