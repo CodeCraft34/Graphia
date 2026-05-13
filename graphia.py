@@ -1,4 +1,6 @@
 import streamlit as st
+import matplotlib
+matplotlib.use('Agg') #non-interactive environments like Streamlit Cloud
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.path as mpath
